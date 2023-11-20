@@ -1,36 +1,33 @@
-from urllib.parse import urlencode
-import requests
-from datetime import datetime
 import os
 import json
+import requests
 import configparser
+from datetime import datetime
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
-
-APP_ID = '51792163'
-OAUTH_BASE_URL = 'https://oauth.vk.com/authorize'
-params = {
-    'client_id': APP_ID,
-    'redirect_uri': 'https://oauth.vk.com/blank.html',
-    'display': 'page',
-    'scope': 'status,photos,offline',
-    'response_type': 'token',
-    'expires_in': 0
-}
-oauth_url = f'{OAUTH_BASE_URL}?{urlencode(params)}'
+from urllib.parse import urlencode
 
 tokens = configparser.ConfigParser()
 tokens.read("tokens.ini")
-VK_TOKEN = tokens['VK']['token']
-YANDEX_TOKEN = tokens['YANDEX']['token']
 
 
 class VKAPIClient:
     API_BASE_URL = 'https://api.vk.com/method'
+    APP_ID = '51792163'
+    OAUTH_BASE_URL = 'https://oauth.vk.com/authorize'
 
-    def __init__(self, token, owner_id):
-        self.token = token
+    def __init__(self, owner_id):
+        self.token = tokens['VK']['token']
         self.owner_id = owner_id
+        params = {
+            'client_id': self.APP_ID,
+            'redirect_uri': 'https://oauth.vk.com/blank.html',
+            'display': 'page',
+            'scope': 'status,photos,offline',
+            'response_type': 'token',
+            'expires_in': 0
+        }
+        oauth_url = f'{self.OAUTH_BASE_URL}?{urlencode(params)}'
 
     def get_common_params(self):
         return {
@@ -129,8 +126,8 @@ class VKAPIClient:
 class Yandex:
     API_BASE_URL = "https://cloud-api.yandex.net/v1/disk"
 
-    def __init__(self, token):
-        self.token = token
+    def __init__(self):
+        self.token = tokens['YANDEX']['token']
 
     def get_common_headers(self):
         return {
@@ -193,10 +190,10 @@ class Google:
 
 
 if __name__ == '__main__':
-    vk_client = VKAPIClient(VK_TOKEN, 1568059)
+    vk_client = VKAPIClient(1568059)
     vk_client.download_profile_photos(8)
     vk_client.download_album_photos(3)
-    yandex = Yandex(YANDEX_TOKEN)
+    yandex = Yandex()
     yandex.create_folder('VK')
     yandex.upload()
     google = Google()
